@@ -2,6 +2,25 @@ import express from "express";
 import type { Request, Response } from "express";
 import { createSchema, createYoga } from "graphql-yoga";
 
+type Todo = {
+	id: string;
+	text: string;
+	completed: boolean;
+};
+const todos: Todo[] = [
+	{
+		id: "1",
+		text: "Learn GraphQL",
+		completed: true,
+	},
+	{
+		id: "2",
+		text: "Build a GraphQL server",
+		completed: false,
+	},
+];
+const nextTodoId = todos.length + 1;
+
 // 1. GraphQL スキーマ定義 (TypeDefs)
 // 最もシンプルな例として、"hello" クエリを定義
 const typeDefs = /* GraphQL */ `
@@ -9,6 +28,26 @@ const typeDefs = /* GraphQL */ `
     hello: String!
     ping: String!
   }
+	type Todo {
+		id: ID!
+		text: String!
+		completed: Boolean!
+	}
+	type Query {
+		hello: String!
+		ping: String!
+		todos: [Todo!]!
+	}
+	type MutationResponse {
+		success: Boolean!
+		message: String
+		todo: Todo
+	}
+	type Mutation {
+		addTodo(text: String!): MutationResponse!
+		updateTodoStatus(id: ID!, completed: Boolean!): MutationResponse!
+		deleteTodo(id: ID!): MutationResponse!
+	}
 `;
 
 // 2. リゾルバ定義
@@ -17,6 +56,58 @@ const resolvers = {
 	Query: {
 		hello: (): string => "world!", // hello クエリは "world!" 文字列を返す
 		ping: (): string => "pong", // ping クエリは "pong" 文字列を返す
+		todos: (): Todo[] => todos,
+	},
+	Mutation: {
+		addTodo: (_: unknown, { text }: { text: string }) => {
+			const newTodo: Todo = {
+				id: nextTodoId.toString(),
+				text,
+				completed: false,
+			};
+			todos.push(newTodo);
+
+			return {
+				success: true,
+				message: "Todo added successfully",
+				todo: newTodo,
+			};
+		},
+		updateTodoStatus: (
+			_: unknown,
+			{ id, completed }: { id: string; completed: boolean },
+		) => {
+			const index = todos.findIndex((todo) => todo.id === id);
+			if (index !== -1) {
+				todos[index].completed = completed;
+				return {
+					success: true,
+					message: "Todo updated successfully",
+					todo: todos[index],
+				};
+			}
+			return {
+				success: false,
+				message: "Todo not found",
+				todo: null,
+			};
+		},
+		deleteTodo: (_: unknown, { id }: { id: string }) => {
+			const index = todos.findIndex((todo) => todo.id === id);
+			if (index !== -1) {
+				const deletedTodo = todos.splice(index, 1)[0];
+				return {
+					success: true,
+					message: "Todo deleted successfully",
+					todo: deletedTodo,
+				};
+			}
+			return {
+				success: false,
+				message: "Todo not found",
+				todo: null,
+			};
+		},
 	},
 };
 
