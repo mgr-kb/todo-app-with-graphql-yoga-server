@@ -1,0 +1,23 @@
+type Todo {
+	id: ID!
+	text: String!
+	completed: Boolean!
+}
+
+type Query {
+	hello: String!
+	ping: String!
+	todos: [Todo!]!
+}
+
+type MutationResponse {
+	success: Boolean!
+	message: String
+	todo: Todo
+}
+
+type Mutation {
+	addTodo(text: String!): MutationResponse!
+	updateTodoStatus(id: ID!, completed: Boolean!): MutationResponse!
+	deleteTodo(id: ID!): MutationResponse!
+}

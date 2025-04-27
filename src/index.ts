@@ -1,6 +1,8 @@
 import express from "express";
 import type { Request, Response } from "express";
 import { createSchema, createYoga } from "graphql-yoga";
+import fs from "node:fs"; // Node.jsのファイルシステムモジュールをインポート
+import path from "node:path"; // Node.jsのパスモジュールをインポート
 
 type Todo = {
 	id: string;
@@ -19,36 +21,13 @@ const todos: Todo[] = [
 		completed: false,
 	},
 ];
-const nextTodoId = todos.length + 1;
+let nextTodoId = todos.length + 1; // IDの初期化を修正
 
-// 1. GraphQL スキーマ定義 (TypeDefs)
-// 最もシンプルな例として、"hello" クエリを定義
-const typeDefs = /* GraphQL */ `
-  type Query {
-    hello: String!
-    ping: String!
-  }
-	type Todo {
-		id: ID!
-		text: String!
-		completed: Boolean!
-	}
-	type Query {
-		hello: String!
-		ping: String!
-		todos: [Todo!]!
-	}
-	type MutationResponse {
-		success: Boolean!
-		message: String
-		todo: Todo
-	}
-	type Mutation {
-		addTodo(text: String!): MutationResponse!
-		updateTodoStatus(id: ID!, completed: Boolean!): MutationResponse!
-		deleteTodo(id: ID!): MutationResponse!
-	}
-`;
+// 1. GraphQL スキーマ定義 (TypeDefs) をファイルから読み込む
+const typeDefs = fs.readFileSync(
+	path.join(__dirname, "schema.graphql"), // カレントディレクトリにある schema.graphql を指定
+	"utf-8", // 文字コードを指定
+);
 
 // 2. リゾルバ定義
 // スキーマの各フィールドに対応するデータを返す関数
@@ -65,6 +44,7 @@ const resolvers = {
 				text,
 				completed: false,
 			};
+			nextTodoId++; // IDをインクリメント
 			todos.push(newTodo);
 
 			return {
@@ -99,7 +79,6 @@ const resolvers = {
 				return {
 					success: true,
 					message: "Todo deleted successfully",
-					todo: deletedTodo,
 				};
 			}
 			return {
