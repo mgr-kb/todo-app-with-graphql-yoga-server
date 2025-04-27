@@ -1,8 +1,8 @@
+import fs from "node:fs"; // Node.jsのファイルシステムモジュールをインポート
+import path from "node:path"; // Node.jsのパスモジュールをインポート
 import express from "express";
 import type { Request, Response } from "express";
 import { createSchema, createYoga } from "graphql-yoga";
-import fs from "node:fs"; // Node.jsのファイルシステムモジュールをインポート
-import path from "node:path"; // Node.jsのパスモジュールをインポート
 
 type Todo = {
 	id: string;
